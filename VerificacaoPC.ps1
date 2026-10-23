@@ -324,7 +324,7 @@ Add-Secao '9. Arquivo hosts e assinaturas WMI' 'Lugares onde vírus se esconde p
 
 # ---------------------------------------------------------------- relatório
 Passo 'Montando o relatório'
-function H($t) { [System.Net.WebUtility]::HtmlEncode([string]$t) }
+function HtmlSafe($t) { [System.Net.WebUtility]::HtmlEncode([string]$t) }
 
 $todas = @($Secoes | ForEach-Object { $_.Linhas })
 $nS = @($todas | Where-Object { $_.Nivel -eq 'SUSPEITO' }).Count
@@ -340,7 +340,7 @@ foreach ($s in $Secoes) {
   foreach ($l in $s.Linhas) {
     if ($l.Nivel -ne 'OK') {
       $resumo = (@($l.PSObject.Properties | Where-Object { $_.Name -ne 'Nivel' -and "$($_.Value)" } | Select-Object -First 3 | ForEach-Object { "$($_.Value)" }) -join ' | ')
-      [void]$sbLista.Append("<li><span class='nv $($l.Nivel.ToLower())'>$(H $l.Nivel)</span> <b>$(H ($s.Titulo -replace '^\S+\s',''))</b>: $(H $resumo)</li>")
+      [void]$sbLista.Append("<li><span class='nv $($l.Nivel.ToLower())'>$(HtmlSafe $l.Nivel)</span> <b>$(HtmlSafe ($s.Titulo -replace '^\S+\s',''))</b>: $(HtmlSafe $resumo)</li>")
     }
   }
 }
@@ -348,19 +348,19 @@ $lista = if ($sbLista.Length) { "<h2>Itens para olhar</h2><ul class='lista'>$($s
 
 $sb = New-Object System.Text.StringBuilder
 foreach ($s in $Secoes) {
-  [void]$sb.Append("<section><h2>$(H $s.Titulo)</h2><p class='desc'>$(H $s.Descricao)</p>")
+  [void]$sb.Append("<section><h2>$(HtmlSafe $s.Titulo)</h2><p class='desc'>$(HtmlSafe $s.Descricao)</p>")
   if ($s.Linhas.Count -eq 0) { [void]$sb.Append("<p class='vazio'>Nada encontrado.</p>") }
   else {
     $cols = @($s.Linhas | ForEach-Object { $_.PSObject.Properties.Name } | Select-Object -Unique)
     [void]$sb.Append('<div class="tw"><table><thead><tr>')
-    foreach ($c in $cols) { [void]$sb.Append("<th>$(H $c)</th>") }
+    foreach ($c in $cols) { [void]$sb.Append("<th>$(HtmlSafe $c)</th>") }
     [void]$sb.Append('</tr></thead><tbody>')
     foreach ($l in $s.Linhas) {
       [void]$sb.Append('<tr>')
       foreach ($c in $cols) {
         $v = $l.$c
-        if ($c -eq 'Nivel') { [void]$sb.Append("<td><span class='nv $(([string]$v).ToLower())'>$(H $v)</span></td>") }
-        else { [void]$sb.Append("<td>$(H $v)</td>") }
+        if ($c -eq 'Nivel') { [void]$sb.Append("<td><span class='nv $(([string]$v).ToLower())'>$(HtmlSafe $v)</span></td>") }
+        else { [void]$sb.Append("<td>$(HtmlSafe $v)</td>") }
       }
       [void]$sb.Append('</tr>')
     }
@@ -399,9 +399,9 @@ th{background:var(--bg);position:sticky;top:0}tr:last-child td{border-bottom:0}
 footer{margin-top:32px;color:var(--mut);font-size:13px}
 </style></head><body><main>
 <h1>Relatório de Segurança do PC</h1>
-<div class="meta">Computador: $(H $env:COMPUTERNAME) &middot; Usuário: $(H $env:USERNAME) &middot; $(H $os) &middot; Gerado em $(Get-Date -Format 'dd/MM/yyyy HH:mm') &middot; Duração: $duracao min</div>
+<div class="meta">Computador: $(HtmlSafe $env:COMPUTERNAME) &middot; Usuário: $(HtmlSafe $env:USERNAME) &middot; $(HtmlSafe $os) &middot; Gerado em $(Get-Date -Format 'dd/MM/yyyy HH:mm') &middot; Duração: $duracao min</div>
 $avisoAdmin
-<div class="veredito $classeV">$(H $veredito)</div>
+<div class="veredito $classeV">$(HtmlSafe $veredito)</div>
 <div class="cont"><div><b style="color:var(--su)">$nS</b>Suspeito</div><div><b style="color:var(--cf)">$nC</b>Conferir</div><div><b style="color:var(--ok)">$nO</b>OK</div></div>
 $lista
 $($sb.ToString())
